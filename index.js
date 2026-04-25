@@ -1,6 +1,18 @@
 require("dotenv").config();
 
+const express = require("express");
 const { Client, GatewayIntentBits, PermissionsBitField } = require("discord.js");
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get("/", (req, res) => {
+  res.send("BGMI Scrim Bot is running 🚀");
+});
+
+app.listen(PORT, () => {
+  console.log(`Web server running on port ${PORT}`);
+});
 
 const client = new Client({
   intents: [
@@ -43,13 +55,10 @@ client.on("messageCreate", (message) => {
 
 Commands:
 \`!register TEAM_NAME\` - Team register
-\`!slots\` - WhatsApp style slot list
+\`!slots\` - Slot list show
 \`!match\` - Match timing + maps
 \`!remove SLOT_NO\` - Admin only
 \`!reset\` - Admin only
-
-Example:
-\`!register TEAM XTREME\`
 `);
   }
 
@@ -124,7 +133,6 @@ Example:
     }
 
     slots = Array(25).fill("EMPTY");
-
     return message.channel.send("✅ Sab slots reset ho gaye.");
   }
 });
