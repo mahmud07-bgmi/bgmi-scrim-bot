@@ -14,6 +14,7 @@ app.listen(PORT, () => {
   console.log("Web server running on port " + PORT);
 });
 
+// DISCORD BOT
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -34,12 +35,9 @@ client.on("messageCreate", (message) => {
   }
 });
 
-if (!process.env.TOKEN) {
-  console.log("❌ TOKEN missing in Render Environment");
-} else {
-  client.login(process.env.TOKEN)
-    .then(() => console.log("✅ Login request sent"))
-    .catch((err) => {
-      console.log("❌ Discord login error:", err.message);
-    });
-}
+// DEBUG
+console.log("TOKEN:", process.env.TOKEN ? "FOUND" : "MISSING");
+
+client.login(process.env.TOKEN)
+  .then(() => console.log("✅ Login success"))
+  .catch(err => console.log("❌ Login error:", err));
