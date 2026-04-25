@@ -1,13 +1,13 @@
 require("dotenv").config();
 
 const express = require("express");
-const { Client, GatewayIntentBits, PermissionsBitField } = require("discord.js");
+const { Client, GatewayIntentBits } = require("discord.js");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 app.get("/", (req, res) => {
-  res.send("BGMI Scrim Bot is running 🚀");
+  res.send("BGMI Scrim Bot Running 🚀");
 });
 
 app.listen(PORT, () => {
@@ -22,92 +22,24 @@ const client = new Client({
   ]
 });
 
-let slots = Array(25).fill("EMPTY");
-
 client.once("ready", () => {
-  console.log(`BGMI Scrim Bot Online: ${client.user.tag}`);
+  console.log(`✅ Bot Online: ${client.user.tag}`);
 });
 
 client.on("messageCreate", (message) => {
   if (message.author.bot) return;
 
-  const args = message.content.trim().split(" ");
-  const command = args[0].toLowerCase();
-
-  if (command === "!help") {
-    return message.channel.send(
-      "🏆 **BGMI SCRIM BOT**\n\n" +
-      "`!register TEAM_NAME`\n" +
-      "`!slots`\n" +
-      "`!remove SLOT_NO` - Admin only\n" +
-      "`!reset` - Admin only"
-    );
-  }
-
-  if (command === "!register") {
-    const teamName = args.slice(1).join(" ").trim().toUpperCase();
-
-    if (!teamName) {
-      return message.channel.send("Team name likho: `!register TEAM XTREME`");
-    }
-
-    if (slots.includes(teamName)) {
-      return message.channel.send("Ye team already registered hai ✅");
-    }
-
-    const emptyIndex = slots.findIndex(slot => slot === "EMPTY");
-
-    if (emptyIndex === -1) {
-      return message.channel.send("All slots full ❌");
-    }
-
-    slots[emptyIndex] = teamName;
-
-    return message.channel.send(`✅ Registered: **${teamName}**\n🎯 Slot: **${emptyIndex + 1}**`);
-  }
-
-  if (command === "!slots") {
-    let text = "🏆 **GS ESPORTS PRACTICE SCRIMS**\n\n📋 **SLOT LIST**\n\n";
-
-    slots.forEach((team, i) => {
-      text += `SLOT ${i + 1}: ${team}\n`;
-    });
-
-    return message.channel.send(text);
-  }
-
-  if (command === "!remove") {
-    if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-      return message.channel.send("❌ Sirf admin use kar sakta hai.");
-    }
-
-    const slotNo = Number(args[1]);
-
-    if (!slotNo || slotNo < 1 || slotNo > 25) {
-      return message.channel.send("Example: `!remove 5`");
-    }
-
-    const removed = slots[slotNo - 1];
-    slots[slotNo - 1] = "EMPTY";
-
-    return message.channel.send(`🗑️ Slot ${slotNo} removed: **${removed}**`);
-  }
-
-  if (command === "!reset") {
-    if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-      return message.channel.send("❌ Sirf admin use kar sakta hai.");
-    }
-
-    slots = Array(25).fill("EMPTY");
-
-    return message.channel.send("✅ Sab slots reset ho gaye.");
+  if (message.content === "!ping") {
+    message.channel.send("Pong 🏓");
   }
 });
 
 if (!process.env.TOKEN) {
   console.log("❌ TOKEN missing in Render Environment");
 } else {
-  client.login(process.env.TOKEN).catch((err) => {
-    console.log("❌ Discord login error:", err.message);
-  });
+  client.login(process.env.TOKEN)
+    .then(() => console.log("✅ Login request sent"))
+    .catch((err) => {
+      console.log("❌ Discord login error:", err.message);
+    });
 }
