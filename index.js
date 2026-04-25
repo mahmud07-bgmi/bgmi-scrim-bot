@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, PermissionsBitField } = require("discord.js");
 
 const client = new Client({
   intents: [
@@ -12,9 +12,23 @@ const client = new Client({
 
 let slots = Array(25).fill("EMPTY");
 
+const matchInfo = {
+  title: "GS ESPORTS PRACTICE SCRIMS 🇮🇳",
+  time: "7:00 PM - 9:00 PM",
+  maps: [
+    "Erangel — IDP 6:50 PM | START 7:00 PM",
+    "Miramar — IDP 7:40 PM | START 7:50 PM",
+    "Sanhok — IDP 8:25 PM | START 8:35 PM"
+  ]
+};
+
 client.once("ready", () => {
   console.log(`BGMI Scrim Bot Online: ${client.user.tag}`);
 });
+
+function isAdmin(message) {
+  return message.member.permissions.has(PermissionsBitField.Flags.Administrator);
+}
 
 client.on("messageCreate", (message) => {
   if (message.author.bot) return;
@@ -23,31 +37,42 @@ client.on("messageCreate", (message) => {
   const args = msg.split(" ");
   const command = args[0].toLowerCase();
 
-  // HELP
   if (command === "!help") {
-    message.channel.send(`
+    return message.channel.send(`
 🏆 **GS ESPORTS BGMI SCRIM BOT**
 
 Commands:
-\`!register TEAM_NAME\` - team register
-\`!slots\` - slot list show
-\`!reset\` - all slots empty
-\`!remove SLOT_NO\` - slot remove
+\`!register TEAM_NAME\` - Team register
+\`!slots\` - WhatsApp style slot list
+\`!match\` - Match timing + maps
+\`!remove SLOT_NO\` - Admin only
+\`!reset\` - Admin only
 
 Example:
 \`!register TEAM XTREME\`
 `);
   }
 
-  // REGISTER
+  if (command === "!match") {
+    let text = `🏆 **${matchInfo.title}**\n\n`;
+    text += `⏰ **TIME:** ${matchInfo.time}\n\n`;
+    text += `🗺️ **MAP SCHEDULE:**\n`;
+
+    matchInfo.maps.forEach((map, i) => {
+      text += `MATCH ${i + 1}: ${map}\n`;
+    });
+
+    return message.channel.send(text);
+  }
+
   if (command === "!register") {
-    const teamName = args.slice(1).join(" ");
+    const teamName = args.slice(1).join(" ").trim().toUpperCase();
 
     if (!teamName) {
       return message.channel.send("Team name likho. Example: `!register TEAM XTREME`");
     }
 
-    if (slots.includes(teamName.toUpperCase())) {
+    if (slots.includes(teamName)) {
       return message.channel.send("Ye team already registered hai ✅");
     }
 
@@ -57,24 +82,30 @@ Example:
       return message.channel.send("All slots full ho gaye ❌");
     }
 
-    slots[emptyIndex] = teamName.toUpperCase();
+    slots[emptyIndex] = teamName;
 
-    message.channel.send(`✅ Registered: **${teamName.toUpperCase()}**\n🎯 Slot: **${emptyIndex + 1}**`);
+    return message.channel.send(`✅ Registered: **${teamName}**\n🎯 Slot: **${emptyIndex + 1}**`);
   }
 
-  // SLOT LIST
   if (command === "!slots") {
-    let text = `🏆 **GS ESPORTS PRACTICE SCRIMS**\n\n📋 **SLOT LIST**\n\n`;
+    let text = `🏆 ${matchInfo.title}\n`;
+    text += `⏰ TIME: ${matchInfo.time}\n\n`;
+    text += `📋 SLOT LIST\n\n`;
 
     slots.forEach((team, index) => {
       text += `SLOT ${index + 1}: ${team}\n`;
     });
 
-    message.channel.send(text);
+    text += `\n✅ Register command: !register TEAM_NAME`;
+
+    return message.channel.send(text);
   }
 
-  // REMOVE SLOT
   if (command === "!remove") {
+    if (!isAdmin(message)) {
+      return message.channel.send("❌ Ye command sirf admin use kar sakta hai.");
+    }
+
     const slotNo = Number(args[1]);
 
     if (!slotNo || slotNo < 1 || slotNo > 25) {
@@ -84,13 +115,17 @@ Example:
     const removedTeam = slots[slotNo - 1];
     slots[slotNo - 1] = "EMPTY";
 
-    message.channel.send(`🗑️ Slot ${slotNo} removed: **${removedTeam}**`);
+    return message.channel.send(`🗑️ Slot ${slotNo} removed: **${removedTeam}**`);
   }
 
-  // RESET
   if (command === "!reset") {
+    if (!isAdmin(message)) {
+      return message.channel.send("❌ Ye command sirf admin use kar sakta hai.");
+    }
+
     slots = Array(25).fill("EMPTY");
-    message.channel.send("✅ Sab slots reset ho gaye.");
+
+    return message.channel.send("✅ Sab slots reset ho gaye.");
   }
 });
 
